@@ -1,5 +1,8 @@
 *.class
 
+# antlr4 generated files.
+*.tokens
+
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
