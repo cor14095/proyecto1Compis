@@ -2,6 +2,10 @@
 
 # antlr4 generated files.
 *.tokens
+*Parser.java
+*Lexer.java
+*Listener.java
+*BaseListener.java
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
