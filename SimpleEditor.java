@@ -215,14 +215,24 @@ public class SimpleEditor extends JFrame {
       CommonTokenStream tokens = new CommonTokenStream(lexer);
       // create a parser that feeds off the tokens buffer
       ExprParser parser = new ExprParser(tokens);
+
+      // Add custom error handdlers.
+      lexer.removeErrorListeners();
+      lexer.addErrorListener(DescriptiveErrorListener.INSTANCE);
+      parser.removeErrorListeners();
+      parser.addErrorListener(DescriptiveErrorListener.INSTANCE);
+
       ParseTree tree = parser.prog(); // begin parsing at init rule
       System.out.println(tree.toStringTree(parser)); // print LISP-style tree
+      System.out.println(parser.getNumberOfSyntaxErrors());
+      //System.out.println(parser.syntaxError());
+
 
       JFrame frame = new JFrame("Antlr AST");
       JPanel panel = new JPanel();
       TreeViewer viewr = new TreeViewer(Arrays.asList(
         parser.getRuleNames()),tree);
-      System.out.println(parser.getRuleNames());
+      //System.out.println(parser.getRuleNames());
       viewr.setScale(1.5);//scale a little
       panel.add(viewr);
       frame.add(panel);
@@ -231,4 +241,31 @@ public class SimpleEditor extends JFrame {
 
     }
   }
+
+  public class ExceptionErrorStrategy extends DefaultErrorStrategy {
+
+    @Override
+    public void recover(Parser recognizer, RecognitionException e) {
+        throw e;
+    }
+
+    @Override
+    public void reportInputMismatch(Parser recognizer, InputMismatchException e) throws RecognitionException {
+        String msg = "mismatched input " + getTokenErrorDisplay(e.getOffendingToken());
+        msg += " expecting one of "+e.getExpectedTokens().toString(recognizer.getTokenNames());
+        RecognitionException ex = new RecognitionException(msg, recognizer, recognizer.getInputStream(), recognizer.getContext());
+        ex.initCause(e);
+        throw ex;
+    }
+
+    @Override
+    public void reportMissingToken(Parser recognizer) {
+        beginErrorCondition(recognizer);
+        Token t = recognizer.getCurrentToken();
+        IntervalSet expecting = getExpectedTokens(recognizer);
+        String msg = "missing "+expecting.toString(recognizer.getTokenNames()) + " at " + getTokenErrorDisplay(t);
+        throw new RecognitionException(msg, recognizer, recognizer.getInputStream(), recognizer.getContext());
+    }
+  }
+
 }
