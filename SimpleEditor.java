@@ -38,7 +38,7 @@ public class SimpleEditor extends JFrame {
     content.add(textComp, BorderLayout.CENTER);
     content.add(createToolBar(), BorderLayout.NORTH);
     setJMenuBar(createMenuBar());
-    setSize(320, 240);
+    setSize(500, 500);
   }
 
   // Create the JTextComponent subclass.
@@ -52,15 +52,15 @@ public class SimpleEditor extends JFrame {
   protected void makeActionsPretty() {
     Action a;
     a = textComp.getActionMap().get(DefaultEditorKit.cutAction);
-    a.putValue(Action.SMALL_ICON, new ImageIcon("icons/cut.gif"));
+    a.putValue(Action.SMALL_ICON, new ImageIcon("icons/cut.png"));
     a.putValue(Action.NAME, "Cut");
 
     a = textComp.getActionMap().get(DefaultEditorKit.copyAction);
-    a.putValue(Action.SMALL_ICON, new ImageIcon("icons/copy.gif"));
+    a.putValue(Action.SMALL_ICON, new ImageIcon("icons/copy.png"));
     a.putValue(Action.NAME, "Copy");
 
     a = textComp.getActionMap().get(DefaultEditorKit.pasteAction);
-    a.putValue(Action.SMALL_ICON, new ImageIcon("icons/paste.gif"));
+    a.putValue(Action.SMALL_ICON, new ImageIcon("icons/paste.png"));
     a.putValue(Action.NAME, "Paste");
 
     a = textComp.getActionMap().get(DefaultEditorKit.selectAllAction);
@@ -72,16 +72,16 @@ public class SimpleEditor extends JFrame {
     JToolBar bar = new JToolBar();
 
     // Add simple actions for opening & saving.
-    bar.add(getOpenAction()).setText("OPEN");
-    bar.add(getSaveAction()).setText("SAVE");
+    bar.add(getOpenAction()).setText("");
+    bar.add(getSaveAction()).setText("");
     bar.addSeparator();
 
     // Add cut/copy/paste buttons.
-    bar.add(textComp.getActionMap().get(DefaultEditorKit.cutAction)).setText("CUT");
+    bar.add(textComp.getActionMap().get(DefaultEditorKit.cutAction)).setText("");
     bar.add(textComp.getActionMap().get(
-              DefaultEditorKit.copyAction)).setText("COPY");
+              DefaultEditorKit.copyAction)).setText("");
     bar.add(textComp.getActionMap().get(
-              DefaultEditorKit.pasteAction)).setText("PASTE");
+              DefaultEditorKit.pasteAction)).setText("");
     return bar;
   }
 
@@ -127,7 +127,7 @@ public class SimpleEditor extends JFrame {
   // An action that opens an existing file
   class OpenAction extends AbstractAction {
     public OpenAction() {
-      super("Open", new ImageIcon("icons/open.gif"));
+      super("Open", new ImageIcon("icons/open.png"));
     }
 
     // Query user for a filename and attempt to open and read the file into the
@@ -163,7 +163,7 @@ public class SimpleEditor extends JFrame {
   // An action that saves the document to a file
   class SaveAction extends AbstractAction {
     public SaveAction() {
-      super("Save", new ImageIcon("icons/save.gif"));
+      super("Save", new ImageIcon("icons/save.png"));
     }
 
     // Query user for a filename and attempt to open and write the text
@@ -199,7 +199,7 @@ public class SimpleEditor extends JFrame {
   // An action that compiles the document code.
   class CompileAction extends AbstractAction {
     public CompileAction() {
-      super("Compile", new ImageIcon("icons/compile.gif"));
+      super("Compile", new ImageIcon("icons/compile.png"));
     }
 
     // This action will call Antlr to get the Lexer and Parser.
