@@ -52,6 +52,7 @@ public class SimpleEditor extends JFrame {
     content.add(textComp, BorderLayout.CENTER);
     content.add(createToolBar(), BorderLayout.NORTH);
     setJMenuBar(createMenuBar());
+    setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
     setSize(500, 500);
   }
 

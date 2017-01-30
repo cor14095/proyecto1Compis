@@ -1,0 +1,13 @@
+class Hola {
+int var ;
+int que;
+boolean lo;
+boolean co;
+void pedro ()
+	{
+		var = 3;
+		que = 4;
+		var + que;
+		lo + co;
+	}
+}
