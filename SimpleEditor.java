@@ -2,16 +2,25 @@
 // An example showing several DefaultEditorKit features. This class is designed
 // to be easily extended for additional functionality.
 //
+
+import java.io.*;
+import java.awt.Font;
+import java.awt.event.*;
+import java.awt.Container;
+import java.awt.BorderLayout;
+
+import java.util.*;
 import javax.swing.*;
 import javax.swing.text.*;
-import java.awt.*;
-import java.io.*;
-import java.awt.event.*;
-import java.util.*;
+
+import java.nio.file.*;
+import java.nio.charset.Charset;
 
 import org.antlr.v4.runtime.*;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.gui.*;
+import org.antlr.v4.runtime.tree.*;
+import org.antlr.v4.gui.TreeViewer;
+import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.CommonTokenStream;
 
 public class SimpleEditor extends JFrame {
 
@@ -22,6 +31,11 @@ public class SimpleEditor extends JFrame {
   private JTextComponent textComp;
   private Hashtable actionHash = new Hashtable();
 
+  private JTextArea areaError = new JTextArea(20,120);
+
+  private Path file = Paths.get("ErrorLog_Syntax.log");
+  private List<String> Errors;
+
   public static void main(String[] args) {
     SimpleEditor editor = new SimpleEditor();
     editor.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -30,7 +44,7 @@ public class SimpleEditor extends JFrame {
 
   // Create an editor.
   public SimpleEditor() {
-    super("ANTLR IDLE Editor");
+    super("ANTLR IDLE Editor - Alejandro 'Perry' Cortes.");
     textComp = createTextComponent();
     makeActionsPretty();
 
@@ -207,27 +221,32 @@ public class SimpleEditor extends JFrame {
 
       System.out.println("Estoy compilando!");
 
-      // create a CharStream that reads from standard input
+      // Create my BaseErrorListener.
+      BaseErrorListener myErrorListener = new ThrowingErrorListener();
+
+      // Create a CharStream that reads from standard input
       ANTLRInputStream input = new ANTLRInputStream(textComp.getText());
+
       // create a lexer that feeds off of input CharStream
       ExprLexer lexer = new ExprLexer(input);
+
+      // Add custom error handdlers.
+      lexer.removeErrorListeners();
+      lexer.addErrorListener(myErrorListener);
+
       // create a buffer of tokens pulled from the lexer
       CommonTokenStream tokens = new CommonTokenStream(lexer);
+
       // create a parser that feeds off the tokens buffer
       ExprParser parser = new ExprParser(tokens);
 
       // Add custom error handdlers.
-      lexer.removeErrorListeners();
-      lexer.addErrorListener(DescriptiveErrorListener.INSTANCE);
       parser.removeErrorListeners();
-      parser.addErrorListener(DescriptiveErrorListener.INSTANCE);
+      parser.addErrorListener(myErrorListener);
 
-      ParseTree tree = parser.prog(); // begin parsing at init rule
-      System.out.println(tree.toStringTree(parser)); // print LISP-style tree
-      System.out.println(parser.getNumberOfSyntaxErrors());
-      //System.out.println(parser.syntaxError());
-
-
+      // Create the tree view.
+      ParseTree tree = parser.program(); // begin parsing at init rule
+      
       JFrame frame = new JFrame("Antlr AST");
       JPanel panel = new JPanel();
       TreeViewer viewr = new TreeViewer(Arrays.asList(
@@ -239,33 +258,32 @@ public class SimpleEditor extends JFrame {
       frame.setSize(500, 500);
       frame.setVisible(true);
 
+      //Error Viewr
+      JFrame eFrame = new JFrame("Antlr Error Log");
+      areaError.setFont(new Font("Monospaced", Font.PLAIN, 12));
+      areaError.setEditable(false);
+      areaError.setLineWrap(true);
+      eFrame.add(areaError, BorderLayout.CENTER);
+      eFrame.setSize(500, 500);
+      eFrame.setVisible(true);
+
+      // Readn and write errors.
+      try {
+        Errors = Files.readAllLines(file, Charset.forName("UTF-8"));
+        Files.deleteIfExists(file);
+        areaError.setText("");
+        System.out.println(Errors);
+        for (int i = 0; i < Errors.size(); i++) {
+          areaError.append("(" + (i + 1) + "): " + Errors.get(i) + "\n");
+        }
+      }
+      catch ( IOException e ) {
+        areaError.setText("-- Compiled without errors -- ");
+      }
+      
     }
+
   }
 
-  public class ExceptionErrorStrategy extends DefaultErrorStrategy {
-
-    @Override
-    public void recover(Parser recognizer, RecognitionException e) {
-        throw e;
-    }
-
-    @Override
-    public void reportInputMismatch(Parser recognizer, InputMismatchException e) throws RecognitionException {
-        String msg = "mismatched input " + getTokenErrorDisplay(e.getOffendingToken());
-        msg += " expecting one of "+e.getExpectedTokens().toString(recognizer.getTokenNames());
-        RecognitionException ex = new RecognitionException(msg, recognizer, recognizer.getInputStream(), recognizer.getContext());
-        ex.initCause(e);
-        throw ex;
-    }
-
-    @Override
-    public void reportMissingToken(Parser recognizer) {
-        beginErrorCondition(recognizer);
-        Token t = recognizer.getCurrentToken();
-        IntervalSet expecting = getExpectedTokens(recognizer);
-        String msg = "missing "+expecting.toString(recognizer.getTokenNames()) + " at " + getTokenErrorDisplay(t);
-        throw new RecognitionException(msg, recognizer, recognizer.getInputStream(), recognizer.getContext());
-    }
-  }
 
 }
