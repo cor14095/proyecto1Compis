@@ -1,4 +1,4 @@
-grammar Expr;
+grammar Micro;
 KEYWORD
 	:	'PROGRAM'
 	|	'BEGIN'
