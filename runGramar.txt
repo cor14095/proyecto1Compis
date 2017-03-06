@@ -1,0 +1,4 @@
+SET CLASSPATH=.;C:\Javalib\antlr-4.6-complete.jar;%CLASSPATH%
+antlr4 Expr.g4
+javac Expr*.java
+antlr4 Expr.g4 -no-listener -visitor

@@ -12,6 +12,7 @@ import java.awt.BorderLayout;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.text.*;
+import java.util.stream.Collectors;
 
 import java.nio.file.*;
 import java.nio.charset.Charset;
@@ -33,8 +34,10 @@ public class SimpleEditor extends JFrame {
 
   private JTextArea areaError = new JTextArea(20,120);
 
-  private Path file = Paths.get("ErrorLog_Syntax.log");
-  private List<String> Errors;
+  private Path syntaxFile = Paths.get("ErrorLog_Syntax.log");
+  private Path grammarFile = Paths.get("ErrorLog_Grammar.log");
+  private List<String> syntaxErrors;
+  private List<String> grammarErrors;
 
   public static void main(String[] args) {
     SimpleEditor editor = new SimpleEditor();
@@ -252,6 +255,11 @@ public class SimpleEditor extends JFrame {
       JPanel panel = new JPanel();
       TreeViewer viewr = new TreeViewer(Arrays.asList(
         parser.getRuleNames()),tree);
+
+      // Added the visitor.
+      EvalVisitor eval = new EvalVisitor();
+      eval.visit(tree);
+
       //System.out.println(parser.getRuleNames());
       viewr.setScale(1.5);//scale a little
       panel.add(viewr);
@@ -269,17 +277,30 @@ public class SimpleEditor extends JFrame {
       eFrame.setVisible(true);
 
       // Readn and write errors.
+      areaError.setText("");
       try {
-        Errors = Files.readAllLines(file, Charset.forName("UTF-8"));
-        Files.deleteIfExists(file);
-        areaError.setText("");
-        System.out.println(Errors);
-        for (int i = 0; i < Errors.size(); i++) {
-          areaError.append("(" + (i + 1) + "): " + Errors.get(i) + "\n");
+        syntaxErrors = Files.readAllLines(syntaxFile, Charset.forName("UTF-8"));
+        Files.deleteIfExists(syntaxFile);
+        areaError.append("----------------- Syntax Errors -----------------" + '\n');
+        for (int i = 0; i < syntaxErrors.size(); i++) {
+          areaError.append("(" + (i + 1) + "): " + syntaxErrors.get(i) + "\n");
         }
       }
       catch ( IOException e ) {
-        areaError.setText("-- Compiled without errors -- ");
+        areaError.append("-- Compiled without Syntax Errors -- \n" );
+      }
+
+      try {
+        grammarErrors = Files.readAllLines(grammarFile, Charset.forName("UTF-8"));
+        Files.deleteIfExists(grammarFile);
+        areaError.append("----------------- Grammar Errors -----------------" + '\n');
+        grammarErrors = grammarErrors.stream().distinct().collect(Collectors.toList());
+        for (int i = 0; i < grammarErrors.size(); i++) {
+          areaError.append("(" + (i + 1) + "): " + grammarErrors.get(i) + "\n");
+        }
+      }
+      catch ( IOException e ) {
+        areaError.append("-- Compiled without Grammar Errors -- \n");
       }
       
     }

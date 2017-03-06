@@ -1,0 +1,104 @@
+class x {
+	int h;
+	int j[3];
+}
+
+class x {
+	struct Rider {
+	        int exp;
+        	int hp;
+        	char name;
+    	}
+	
+	Rider h;
+	Rider h[4];
+}
+
+class x {
+	int suma(int x,int y){
+    		x = x + y;
+    		return x;
+    	}
+}
+
+class p {
+	struct Rider {
+        		int exp;
+        		int hp;
+        		char name;
+    	}
+	void main(){
+        	int x;
+		if(true){
+			Rider roro;
+			roro.exp = 1;
+			roro.hp = 90;
+			roro.name = 'A';
+		} 
+	}
+}
+
+class p {
+	struct Rider {
+        	int exp;
+        	boolean hp;
+       		char name;
+    	}
+	void main(){
+        	boolean x;
+		x = -true;
+		if(!x){
+			Rider roro;
+			roro.exp = 1;
+			x = roro.exp + 1;
+			roro.hp = true;
+			roro.name = 'A';
+		} 
+	}
+}
+
+class x {
+	void main() {
+		int x;
+		x = 200 % 199 % 190;
+	}
+}
+
+class x {
+	void main() {
+		boolean x;
+		boolean y;
+		boolean z;
+		x = true;
+		y = false;
+		z = true;
+		if (!(x || y) && z) {
+			z = -x;
+		}
+	}
+}
+
+class x {
+	void main() {
+		boolean x;
+		boolean y;
+		x = true;
+		y = false;
+		if (!(x || y)) {
+			y = -x;
+		}
+	}
+}
+
+class x {
+	void main() {
+		char x;
+		boolean y;
+		x = 3;
+		y = false;
+		if (!(x <= y)) {
+			y = -x;
+		}
+	}
+}
+

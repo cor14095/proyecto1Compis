@@ -1,0 +1,59 @@
+class p {
+	int u;
+    	int o;
+
+	struct Rider {
+	        int exp;
+        	int hp;
+        	char name;
+    	}
+	int suma(int x,int y){
+    		x = x + y;
+    		return x;
+    	}
+	void main(){
+        	int x;
+			if(true){
+		        	Rider roro;
+	        		roro.exp = 1;
+		        	roro.hp = 90;
+	        		roro.name = 'A';
+			} else {
+				int x;
+				int y;
+				x = 3;
+				y = 7;
+				x = suma(x,y);
+			}
+    	}
+}
+
+class p {
+	int u;
+	int o;
+	int hola[1];
+	struct Rider {
+        	int exp;
+        	int hp;
+        	char name;
+    	}
+	int suma(int x,int y){
+    		x = x + y;
+    		return x;
+    	}
+	void main(){
+        	int x;
+		if(true){
+		        Rider roro;
+	        	roro.exp = 1;
+		        roro.hp = 90;
+	        	roro.name = 'A';
+		} else {
+			int x;
+			int y;
+			x = 3;
+			y = 7;
+			x = x + 2;
+		}
+	}
+}

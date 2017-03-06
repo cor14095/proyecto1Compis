@@ -23,18 +23,17 @@ public class ThrowingErrorListener extends BaseErrorListener {
    public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol, int line, int charPositionInLine, String msg, RecognitionException e) {
 
    		// Here I'm gonna create a file to keep all errors.
-   		errorMsg = errorMsg + newline + "HO SHIT WADUP! - line " + line + ":" + charPositionInLine + " " + msg;
+   		errorMsg = errorMsg + newline + "Syntax Error - line " + line + ":" + charPositionInLine + " " + msg;
 
    		writeErrors(errorMsg, file);
       }
 
     private void writeErrors(String msgs, Path file) {
-    	try {
-    		//Files.deleteIfExists(file);
-    		Files.write(file, Arrays.asList(msgs), Charset.forName("UTF-8"));
-		}
-		catch (IOException e) {
-			System.err.println("Something is wrong.");
-		}
+      try {
+        //Files.deleteIfExists(file);
+        Files.write(file, Arrays.asList(msgs), Charset.forName("UTF-8"));
+      } catch (IOException e) {
+        System.err.println("Something is wrong.");
+		  }
     }
 }

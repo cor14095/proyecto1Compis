@@ -1,202 +1,105 @@
 grammar Expr;
-KEYWORD
-	:	'PROGRAM'
-	|	'BEGIN'
-	|	'END'
-	|	'FUNCTION'
-	|	'READ'
-	|	'WRITE'
-	|	'IF'
-	|	'ELSE'
-	|	'FI'
-	|	'FOR'
-	|	'ROF'
-	|	'CONTINUE'
-	|	'BREAK'
-	|	'RETURN'
-	|	'INT'
-	|	'VOID'	
-	|	'STRING'
-	|	'FLOAT'
-	;
 
-IDENTIFIER
-	:	[_a-zA-Z][_a-zA-Z0-9]*
-	;
+//---------------------------Keywords-------------------------------//
+CLASS 	: 'class';
+STRUCT 	: 'struct';
+TRUE 	: 'true';
+FALSE 	: 'false';
+INT 	: 'int';
+IF 		: 'if';
+ELSE 	: 'else';
+WHILE 	: 'while';
+RETURN 	: 'return';
+CHAR 	: 'char';
+BOOLEAN : 'boolean';
+VOID 	: 'void';
+SCAN 	: 'scan';
+PRINT 	: 'print';
 
-INTLITERAL
-	:	[0-9]+
-	;
+//-------------------------Characters------------------------------//
+fragment LETTER :	('a'..'z' | 'A'..'Z');
+WS 				:	[ \t\r\n]+ ->	channel(HIDDEN);//Whitespace declaration	
+fragment DIGIT	:	('0'..'9');
+CHR 			:	'\''(LETTER|DIGIT|' '|EXC|'"'|'#'|'$'|'%'|'^'|'&'|'*'|LPARENT|RPARENT|PLUS|'_'|MINUS|'?'|'\''|'.'|','|'<'|'>'|':'|';'|'`'|'~'|'@'|'\"') '\''; 
+ID 				:	LETTER(DIGIT|LETTER)*;
+NUM 			:	(DIGIT)+;
+STRING 			: 	'\"'(LETTER|DIGIT|' '|EXC|'"'|'#'|'$'|'%'|'^'|'&'|'*'|LPARENT|RPARENT|PLUS|'_'|MINUS|'?'|'\''|'.'|','|'<'|'>'|':'|';'|'`'|'~'|'@'|'\"'|[\\s])+'\"';
+COMA 			:	','; 
+AND 			:	'&&';
+OR 				:	'||';
+LBRACE			:	'{';
+RBRACE			:	'}';
+DOTCOMMA 		:	';';
+RCORCH 			:	']';
+LCORCH			:	'[';
+LPARENT 		:	'(';
+RPARENT 		:	')';
+EQ 				:	'=';
+DOT 			:	'.';
+PLUS			:	'+';
+MINUS			:	'-';
+EXC				:	'!';
+AST 			:	'*';
+SLSH			:	'/';
+PRCNT			:	'%';
+MTHAN			:	'>';
+LTHAN			:	'<';
+EQMTHAN			:	'>=';
+EQLTHAN			:	'<=';
+EQEQ			:	'==';
+NOTEQ			:	'!=';
 
-FLOATLITERAL
-	:   [0-9]* '.' [0-9]+
-	;
+program 				: CLASS ID LBRACE (declaration)* RBRACE; 
+declaration 			: structDeclaration | varDeclaration | methodDeclaration;
+varDeclaration 			: varType ID DOTCOMMA | varType ID LCORCH NUM RCORCH DOTCOMMA | ID ID DOTCOMMA | ID ID LCORCH NUM RCORCH DOTCOMMA;
+structDeclaration 		: STRUCT ID LBRACE (varDeclaration)* RBRACE;
+varType 				: (INT | CHAR | BOOLEAN | (STRUCT ID) | structDeclaration | VOID);
+methodDeclaration		: methodType ID LPARENT (parameterDeclaration(COMA parameterDeclaration)*)? RPARENT block;
+methodType 				: INT | CHAR | BOOLEAN | VOID;
+parameterDeclaration 	: parameterType ID | parameterType ID LCORCH NUM RCORCH;
+parameterType 			: INT | CHAR | BOOLEAN ;
+block 					: LBRACE (varDeclaration)* (statement)* RBRACE ;
+statement 				: ifBlock | returnBlock | whileBlock | declaredMethodCall DOTCOMMA | assignation | orExpression DOTCOMMA | print ;
+assignation 			: location EQ (orExpression | scan ) DOTCOMMA ;
+whileBlock 				: WHILE LPARENT orExpression RPARENT block ;
+returnBlock 			: RETURN (nExpression) DOTCOMMA ;
 
-STRINGLITERAL
-	:	'"'(~'"')*'"'
-	;
+//----------------------Scan Print-------------------------------//
+print 				: PRINT LPARENT ( STRING | location ) RPARENT DOTCOMMA;
+scan 				: SCAN LPARENT RPARENT;
+ifBlock 			: IF LPARENT orExpression RPARENT block elseBlock;
+elseBlock 			: ELSE ifBlock | ELSE block | /* epsilon */;
+location 			: declaredVariable | dotLocation;
+dotLocation 		: variable ( DOT location) | arrayVariable ( DOT location);
+declaredVariable 	: variable | arrayVariable;
+variable 			: ID;
+arrayVariable 		: ID LCORCH orExpression RCORCH ;
+expressionInP 		: LPARENT orExpression RPARENT ;
 
-COMMENT
-	:	('--'(~'\n')* '\n') -> skip;
+//---------------------Operator Priority-------------------------//
+nExpression 		: orExpression | ;
+orExpression 		: andExpression | orExpression OR andExpression;
+andExpression 		: equalsExpression | andExpression AND equalsExpression;
+equalsExpression 	: relationExpression | equalsExpression eq_op relationExpression;
+relationExpression 	: addSubsExpression | relationExpression rel_op addSubsExpression;
+addSubsExpression 	: mulDivExpression | addSubsExpression as_op mulDivExpression;
+mulDivExpression 	: prExpression | mulDivExpression md_op prExpression;
+prExpression 		: basicExpression | prExpression pr_op basicExpression;
+basicExpression 	: LPARENT (INT|CHAR) RPARENT basic | MINUS basic | EXC basic | basic;
+basic 				: expressionInP | location | declaredMethodCall | literal;
+arg 				: orExpression;
+declaredMethodCall 	: ID LPARENT (arg(COMA arg)*)? RPARENT;
 
+//---------------------------Operators---------------------------//
+as_op 	: PLUS | MINUS;
+md_op 	: AST | SLSH ;
+pr_op 	: PRCNT;
+rel_op 	: LTHAN | MTHAN | EQLTHAN | EQMTHAN ;
+eq_op 	: EQEQ | NOTEQ;
+cond_op : AND | OR;
 
-OPERATOR
-	:	':='
-	|	'+'
-	|	'-'
-	|	'*'
-	|	'/'
-	|	'='
-	|	'!='
-	|	'<'
-	|	'>'
-	|	'('
-	|	')'
-	|	';'
-	|	','
-	|	'<='
-	|	'>='
-	;
-
-WS	:	('\t' | ' ' | '\r'|'\n')+ -> skip;
-
-program:
-	'PROGRAM' id 'BEGIN' pgm_body 'END';
-
-id:
-	IDENTIFIER;
-
-pgm_body:
-	decl func_declarations;
-
-decl:
-	string_decl decl | var_decl decl | ;
-
-string_decl:
-	'STRING' id ':=' str ';';
-
-str:
-	STRINGLITERAL;
-
-var_decl:
-	var_type id_list ';';
-
-var_type:
-	'FLOAT'|'INT';
-
-any_type:
-	var_type | 'VOID';
-
-id_list:
-	id id_tail;
-
-id_tail:
-	',' id id_tail | ;
-
-param_decl_list:
-	param_decl param_decl_tail | ;
-
-param_decl:
-	var_type id;
-
-param_decl_tail:
-	',' param_decl param_decl_tail | ;
-
-func_declarations:
-	func_decl func_declarations | ;
-
-func_decl:
-	'FUNCTION' any_type id '(' param_decl_list ')' 'BEGIN' func_body 'END';
-
-func_body:
-	decl stmt_list;
-
-stmt_list:
-	stmt stmt_list | ;
-
-stmt:
-	base_stmt | if_stmt | for_stmt;
-
-base_stmt:
-	assign_stmt | read_stmt | write_stmt | return_stmt;
-
-assign_stmt:
-	assign_expr ';';
-
-assign_expr:
-	id ':=' expr;
-
-read_stmt:
-	'READ' '(' id_list ')' ';';
-
-write_stmt:
-	'WRITE' '(' id_list ')' ';';
-
-return_stmt:
-	'RETURN' expr ';';
-
-expr:
-	expr_prefix factor;
-
-expr_prefix:
-	expr_prefix factor addop | ;
-
-factor:
-	factor_prefix postfix_expr;
-
-factor_prefix:
-	factor_prefix postfix_expr mulop | ;
-
-postfix_expr:
-	primary | call_expr;
-
-call_expr:
-	id '(' expr_list ')';
-
-expr_list:
-	expr expr_list_tail | ;
-
-expr_list_tail:
-	',' expr expr_list_tail | ;
-
-primary:
-	'(' expr ')' | id | INTLITERAL | FLOATLITERAL;
-
-addop:
-	'+'|'-';
-
-mulop:
-	'*'|'/';
-
-if_stmt:
-	'IF' '(' cond ')' decl stmt_list else_part 'FI';
-
-else_part:
-	'ELSE' decl stmt_list | ;
-
-cond:
-	expr compop expr;
-
-compop:
-	'<'|'>'|'='|'!='|'<='|'>=';
-
-init_stmt:
-	assign_expr | ;
-
-incr_stmt:
-	assign_expr | ;
-
-for_stmt:
-	'FOR' '(' init_stmt ';' cond ';' incr_stmt ')' decl aug_stmt_list 'ROF';
-
-aug_stmt_list:
-	aug_stmt aug_stmt_list | ;
-
-aug_stmt:
-	base_stmt | aug_if_stmt | for_stmt | 'CONTINUE'';' | 'BREAK'';' ;
-
-aug_if_stmt:
-	'IF''(' cond ')' decl aug_stmt_list aug_else_part 'FI';
-
-aug_else_part:
-	'ELSE' decl aug_stmt_list | ;
+//-----------------------------Types---------------------------//
+literal 		: int_literal | char_literal | bool_literal;
+int_literal 	: NUM;
+char_literal 	: CHR;
+bool_literal 	: TRUE | FALSE;
