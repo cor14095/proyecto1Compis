@@ -19,6 +19,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	// - - 0: ID of Node.
 	// - - 1: Type of Node.
 	// - - 2: Scope of Node.
+	// - - 3: Value of node.
     public Map<String,String[]> SymbolTable = new HashMap<String,String[]>();
 
     // Method to write file.
@@ -31,6 +32,24 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
         }
     }
 
+    // Method to print hashMap
+    public void printHash(Map<String,String[]> map) {
+    	//write to file : "fileone"
+	    try {
+	    	File fileTwo = new File("SymbolTable.table");
+	    	FileOutputStream fos = new FileOutputStream(fileTwo);
+	        PrintWriter pw = new PrintWriter(fos);
+
+	        for(Map.Entry<String,String[]> m :map.entrySet()) {
+	            pw.println(m.getKey()+"\t=\t"+Arrays.toString(m.getValue()));
+	        }
+
+	        pw.flush();
+	        pw.close();
+	        fos.close();
+	    } catch (Exception e) {  }
+	}
+
 	@Override 
 	public String visitProgram(ExprParser.ProgramContext ctx) {
 
@@ -40,13 +59,18 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
    				file = Paths.get("ErrorLog_Grammar.log");
    				System.out.println("Visiting!");
 
-				String[] data =  {ctx.getChild(1).getText(), "", String.valueOf(scopeCounter)};
+				String[] data =  {ctx.getChild(1).getText(), "", String.valueOf(scopeCounter), ""};
 				//System.out.println(Arrays.toString(data));
 
 				SymbolTable.put(ctx.getChild(1).getText()+scopeCounter, data);
 				scopeCounter += 1;
 
-				return visitChildren(ctx); 
+				visitChildren(ctx);
+
+				printHash(SymbolTable);
+				System.out.println("End tree.");
+
+				return "final"; 
 	}
 	@Override 
 	public String visitDeclaration(ExprParser.DeclarationContext ctx) { 
@@ -59,7 +83,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 
 				scopeCounter -= 1;
 
-				String[] data = new String[3];
+				String[] data = new String[4];
 
 				System.out.println("I visited: VarDeclaration of " + ctx.getChild(1).getText());
 
@@ -70,6 +94,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 					data[0] = ctx.getChild(1).getText();
 					data[1] = ctx.getChild(0).getText();
 					data[2] = String.valueOf(scopeCounter);
+					data[3] = "";
 
 					//System.out.println(Arrays.toString(data));
 				} else {
@@ -77,11 +102,12 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 					data[0] = ctx.getChild(1).getText();
 					data[1] = "_Array" + ctx.getChild(0).getText() + "," + ctx.getChild(3); // Trick here is that in the table we look for "_Array" and we have all Arrays and after a split we have the size.
 					data[2] = String.valueOf(scopeCounter);
+					data[3] = "";
 
 					//System.out.println(Arrays.toString(data));
 				}
 
-				System.out.println("Key is: " + ctx.getChild(1).getText()+scopeCounter);
+				//System.out.println("Key is: " + ctx.getChild(1).getText()+scopeCounter);
 				SymbolTable.put(ctx.getChild(1).getText()+scopeCounter, data);
 				scopeCounter += 1;
 				return visitChildren(ctx); 
@@ -93,7 +119,8 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 
 				String[] data =  {ctx.getChild(1).getText(), 
 					ctx.getChild(0).getText() + "_" + ctx.getChild(1).getText(), 
-					String.valueOf(scopeCounter)};
+					String.valueOf(scopeCounter),
+					""};
 				//System.out.println(Arrays.toString(data));
 
 				SymbolTable.put(ctx.getChild(1).getText(), data);
@@ -104,21 +131,22 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	@Override 
 	public String visitVarType(ExprParser.VarTypeContext ctx) { 
 				//System.out.println("I visited: varType");
-				return visitChildren(ctx); 
+				return visit(ctx.getChild(0)); 
 	}
 	@Override 
 	public String visitMethodDeclaration(ExprParser.MethodDeclarationContext ctx) { 
 
-				String[] data = new String[3];
+				String[] data = new String[4];
 				String params = "";
 				int paramCounter = 3;			// Start the paramDeclaration at 3rd child.
 
-				System.out.println("I visited: MethodDeclaration");
+				System.out.println("I visited: MethodDeclaration of " + ctx.getChild(1).getText());
 
 				// Make Method values.
 				data[0] = ctx.getChild(1).getText();
 				data[1] = ctx.getChild(0).getText();
 				data[2] = String.valueOf(scopeCounter);
+				data[3] = "";
 				//System.out.println(Arrays.toString(data));
 
 				// Add them to the Hash Map.
@@ -138,9 +166,10 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 
 				scopeCounter -= 1;
 
-				String[] data = new String[3];
+				String[] data = new String[4];
 
-				System.out.println("I visited: ParameterDeclaration For: " + ctx.getParent().getChild(1).getText());
+				System.out.println("I visited: ParameterDeclaration for: " + ctx.getParent().getChild(1).getText()
+					+ " of " + ctx.getChild(1).getText());
 
 				// We have 2 cases here, 1) normal declaration, 2) Array declaration.
 				// For the first case it's simple
@@ -149,6 +178,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 					data[0] = ctx.getChild(1).getText();
 					data[1] = ctx.getChild(0).getText();
 					data[2] = String.valueOf(scopeCounter);
+					data[3] = "";
 
 					//System.out.println(Arrays.toString(data));
 				} else {
@@ -156,6 +186,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 					data[0] = ctx.getChild(1).getText();
 					data[1] = "_Array" + ctx.getChild(0).getText() + "," + ctx.getChild(3); // Trick here is that in the table we look for "_Array" and we have all Arrays and after a split we have the size.
 					data[2] = String.valueOf(scopeCounter);
+					data[3] = "";
 
 					//System.out.println(Arrays.toString(data));
 				}
@@ -182,27 +213,35 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	@Override 
 	public String visitAssignation(ExprParser.AssignationContext ctx) { 
 
-				scopeCounter -= 1;
+				//scopeCounter -= 1;
 
-				System.out.println("I visited: Assignation");
+				System.out.println("I visited: Assignation on scope: " + String.valueOf(scopeCounter));
 				
 				// I need to find the variable type first.
-				System.out.println(ctx.getChild(0).getText() + " On scope: " + String.valueOf(scopeCounter));
-/*
-				String name = ctx.getChild(0).getText();
-				String dotName = name.substring(0, name.indexOf(".")) + String.valueOf(scopeCounter);
-				int dotScope = Integer.parseInt(SymbolTable.get(SymbolTable.get(dotName)[1])[2]);
-				String varName = name.substring(name.indexOf(".") + 1, name.length());
-				String varKey = varName + String.valueOf(dotScope);
-				String varType = SymbolTable.get(varKey)[1];
-*/
-				scopeCounter += 1;
+				//System.out.println("------------ 1 ------------");
+				String left = visit(ctx.getChild(0));
+				//System.out.println("------------ 2 ------------");
+				String right = visit(ctx.getChild(2));
+				//System.out.println("------------ 3 ------------");
+				//System.out.println(left + " - " + right);
+
+				// Now that i have both types I must check if they're the same.
+				if (left.equals(right)) {
+					// If they're the same I must add the value to the variable on the left.
+					String varName = ctx.getChild(0).getText();
+					String varValue = ctx.getChild(2).getText();
+					System.out.println(varName + " -> " + varValue);
+
+				}
+
+				//scopeCounter += 1;
 
 				return visitChildren(ctx); 
 	}
 	@Override 
 	public String visitWhileBlock(ExprParser.WhileBlockContext ctx) { 
 				//System.out.println("I visited ");
+				scopeCounter += 1;
 				return visitChildren(ctx); 
 	}
 	@Override 
@@ -213,6 +252,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	@Override 
 	public String visitPrint(ExprParser.PrintContext ctx) { 
 				//System.out.println("I visited ");
+				System.out.println(ctx.getChild(2).getText());
 				return visitChildren(ctx); 
 	}
 	@Override 
@@ -223,11 +263,13 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	@Override 
 	public String visitIfBlock(ExprParser.IfBlockContext ctx) { 
 				//System.out.println("I visited ");
+				scopeCounter += 1;
 				return visitChildren(ctx); 
 	}
 	@Override 
 	public String visitElseBlock(ExprParser.ElseBlockContext ctx) { 
 				//System.out.println("I visited ");
+				scopeCounter += 1;
 				return visitChildren(ctx); 
 	}
 	@Override 
@@ -268,11 +310,11 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 
 				//System.out.println("I visited ");
 				String varName = ctx.getText();
-				//System.out.println(varName);
+				//System.out.println(varName + "<- Var Name!");
 				String varKey = varName + String.valueOf(scopeCounter);
-				//System.out.println(varKey);
+				//System.out.println(varKey + "<- Var Key!");
 				String varType = SymbolTable.get(varKey)[1];
-				//System.out.println(varType);
+				//System.out.println(varType + "<- Var Type!");
 
 				scopeCounter += 1;
 
@@ -314,10 +356,26 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 				//System.out.println("I visited ");
 
 				try {
+					// Thing is that in the if conndition y need to use the scope of the parent, not the if block scope.
+					if (ctx.getParent().getChild(0).getText().equals("if") 
+						|| ctx.getParent().getChild(0).getText().equals("else")
+						|| ctx.getParent().getChild(0).getText().equals("while")) {
+						scopeCounter -= 1;
+						System.out.println("Back 1 scope.");
+					}
+
 					String left = visit(ctx.getChild(0));
 					String right = visit(ctx.getChild(2));
 
 					//System.out.println(left + " - " + right);
+
+					// I visit the childs and then I can go back to If scope.
+					if (ctx.getParent().getChild(0).getText().equals("if") 
+						|| ctx.getParent().getChild(0).getText().equals("else")
+						|| ctx.getParent().getChild(0).getText().equals("while")) {
+						scopeCounter += 1;
+						System.out.println("Up one scope.");
+					}
 
 					if (left.equals(right)) {
 						//System.out.println("bool");
@@ -502,8 +560,8 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 
 						if (ctx.getChild(0).getText().equals("!")) {
 							// not operator can only be aplied to a boolean.
-							//System.out.println(ctx.getChild(1).getText());
-							//System.out.println(visit(ctx.getChild(1)));
+							//System.out.println(ctx.getChild(1).getText() + " <- Child 1.");
+							//System.out.println(visit(ctx.getChild(1)) + " <- Child 1 varType.");
 							if (!visit(ctx.getChild(1)).equals("boolean")) {
 								// It's and error.
 								errorMsg = errorMsg + newline + "Grammar Error - At line: " + ctx.getText() + ". Invalid use of '!' type must be 'boolean'.";
@@ -517,6 +575,8 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 						return visit(ctx.getChild(0));
 					}
 				} catch (NullPointerException e) {
+					//System.out.println(ctx.getText() + " <------------------");
+					//System.out.println(e.toString());
 					errorMsg = errorMsg + newline + "Grammar Error - At line: " + ctx.getParent().getText() + ". Invalid invalid syntax for this Grammar.";
 					writeErrors(errorMsg, file);
 					return visitChildren(ctx);

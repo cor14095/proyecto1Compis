@@ -40,12 +40,13 @@ class p {
 
 class p {
 	struct Rider {
-        	int exp;
-        	boolean hp;
-       		char name;
-    	}
-	void main(){
-        	boolean x;
+		int exp;
+		boolean hp;
+		char name;
+	}
+	void main(char args[3]){
+		boolean x;
+		print("hola mundo!");
 		x = -true;
 		if(!x){
 			Rider roro;
@@ -53,7 +54,7 @@ class p {
 			x = roro.exp + 1;
 			roro.hp = true;
 			roro.name = 'A';
-		} 
+		}
 	}
 }
 
@@ -94,11 +95,23 @@ class x {
 	void main() {
 		char x;
 		boolean y;
-		x = 3;
-		y = false;
+		x = 3 - 'a';
+		y = false + 3;
 		if (!(x <= y)) {
 			y = -x;
 		}
 	}
 }
 
+class x {
+	void main() {
+		char h[6];
+		int x;
+		boolean y;
+		x = 3 - h[4];
+		y = false + 3;
+		if (!(x <= y)) {
+			y = -x;
+		}
+	}
+}
