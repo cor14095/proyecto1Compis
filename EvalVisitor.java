@@ -19,7 +19,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	// - - 0: ID of Node.
 	// - - 1: Type of Node.
 	// - - 2: Scope of Node.
-	// - - 3: Value of node.
+	// - - 3: Value of Node.
     public Map<String,String[]> SymbolTable = new HashMap<String,String[]>();
 
     // Method to write file.
@@ -170,22 +170,30 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 				data[1] = ctx.getChild(0).getText();
 				data[2] = String.valueOf(scopeCounter);
         // data[3] will hold all the types of parameters.
-        int paramCounter = 3;
+
+        String paramType = "";
 				data[3] = "";
         while (!ctx.getChild(paramCounter).getText().equals(")")) {
           // While it does not find the ')', then I have to search for parameters.
-          
+          if (!ctx.getChild(paramCounter).getText().equals(",")) {
+            // If it's not a coma (','),  then I have to get the parameter type.
+            paramType = visit(ctx.getChild(paramCounter));
+            data[3] += paramType+",";
+          }
+          // If it is just move on.
+          paramCounter += 1;
         }
+        System.out.println(data[3]);
 				//System.out.println(Arrays.toString(data));
 
 				// Add them to the Hash Map.
-        System.out.println(data[1] + data[0]);
+        System.out.println(data[1] + data[0] + data[3]);
         try {
-          String test = SymbolTable.get(data[1] + data[0])[0];
+          String test = SymbolTable.get(data[1] + data[0] + data[3])[0];
           errorMsg = errorMsg + newline + "Lexic Error - At line: " + ctx.getText() + ". Double declaration for method.";
           writeErrors(errorMsg, file);
         } catch (NullPointerException e) {
-          SymbolTable.put(data[1] + data[0], data);
+          SymbolTable.put(data[1] + data[0] + data[3], data);
         }
 
 				scopeCounter += 1;
@@ -238,13 +246,14 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	@Override
 	public String visitParameterType(ExprParser.ParameterTypeContext ctx) {
 				//System.out.println("I visited: ParameterType");
-				return visit(ctx.getChild(0));
+        //System.out.println(ctx.getChild(0).getText());
+				return ctx.getChild(0).getText();
 	}
 	@Override
 	public String visitBlock(ExprParser.BlockContext ctx) {
-				System.out.println("I visited: Block For: " +
-          ctx.getParent().getText() + " on scopeCounter = " +
-          String.valueOf(scopeCounter));
+				//System.out.println("I visited: Block For: " +
+        //  ctx.getParent().getText() + " on scopeCounter = " +
+        //  String.valueOf(scopeCounter));
         return visitChildren(ctx);
 	}
 	@Override
@@ -265,7 +274,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 				//System.out.println("------------ 2 ------------");
 				String right = visit(ctx.getChild(2));
 				//System.out.println("------------ 3 ------------");
-				System.out.println(left + " - " + right);
+				//System.out.println(left + " - " + right);
 
 				// Now that i have both types I must check if they're the same.
 				if (left.equals(right)) {
@@ -332,7 +341,7 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
         try {
   				//System.out.println("I visited ");
   				String varName = ctx.getChild(2).getText();
-  				System.out.println(varName);
+  				//System.out.println(varName);
   				String varKey = ctx.getChild(0).getText() + String.valueOf(scopeCounter);
   				varKey = SymbolTable.get(varKey)[1];
   				varKey = varName + SymbolTable.get(varKey)[2];
