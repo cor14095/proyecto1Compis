@@ -1,0 +1,22 @@
+class x {
+int i;
+void factorial ()
+	{
+		while (i < 10) 
+		{
+			j = fac(i);
+		}
+		
+	}
+int fac (int n) 
+	{
+		if (n==0 || n ==1)
+		{
+			return 1;
+		}
+		else 
+		{
+			return n * fac(n-1);
+		}
+	}
+}

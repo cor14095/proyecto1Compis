@@ -9,7 +9,7 @@ class x {
         	int hp;
         	char name;
     	}
-	
+
 	Rider h;
 	Rider h[4];
 }
@@ -20,21 +20,25 @@ class x {
     		return x;
     	}
 }
-
 class p {
 	struct Rider {
         		int exp;
         		int hp;
         		char name;
-    	}
-	void main(){
+	}
+	int suma(int x,int y) {
+		x = x + y;
+		return x;
+	}
+	void main() {
         	int x;
+	x = suma(3,2);
 		if(true){
 			Rider roro;
 			roro.exp = 1;
 			roro.hp = 90;
 			roro.name = 'A';
-		} 
+		}
 	}
 }
 
@@ -44,6 +48,7 @@ class p {
 		boolean hp;
 		char name;
 	}
+
 	void main(char args[3]){
 		boolean x;
 		print("hola mundo!");
@@ -59,7 +64,18 @@ class p {
 }
 
 class x {
+	struct pelo {
+		int x;
+	}
+	struct cabeza {
+		pelo y;
+	}
 	void main() {
+		int x;
+		y = 3;
+	}
+	void main() {
+		int x;
 		int x;
 		x = 200 % 199 % 190;
 	}
@@ -108,6 +124,7 @@ class x {
 		char h[6];
 		int x;
 		boolean y;
+		x = true;
 		x = 3 - h[4];
 		y = false + 3;
 		if (!(x <= y)) {

@@ -52,7 +52,8 @@ public class SimpleEditor extends JFrame {
     makeActionsPretty();
 
     Container content = getContentPane();
-    content.add(textComp, BorderLayout.CENTER);
+    JScrollPane iScroll = new JScrollPane(textComp);
+    content.add(iScroll, BorderLayout.CENTER);
     content.add(createToolBar(), BorderLayout.NORTH);
     setJMenuBar(createMenuBar());
     setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -250,7 +251,7 @@ public class SimpleEditor extends JFrame {
 
       // Create the tree view.
       ParseTree tree = parser.program(); // begin parsing at init rule
-      
+
       JFrame frame = new JFrame("Antlr AST");
       JPanel panel = new JPanel();
       TreeViewer viewr = new TreeViewer(Arrays.asList(
@@ -263,17 +264,21 @@ public class SimpleEditor extends JFrame {
       //System.out.println(parser.getRuleNames());
       viewr.setScale(1.5);//scale a little
       panel.add(viewr);
-      frame.add(panel);
+      JScrollPane tScroll = new JScrollPane(panel);
+      frame.add(tScroll);
       frame.setSize(500, 500);
       frame.setVisible(true);
 
       //Error Viewr
       JFrame eFrame = new JFrame("Antlr Error Log");
+      JPanel eContainer = new JPanel();
       areaError.setFont(new Font("Monospaced", Font.PLAIN, 12));
       areaError.setEditable(false);
       areaError.setLineWrap(true);
-      eFrame.add(areaError, BorderLayout.CENTER);
+      eContainer.add(areaError, BorderLayout.CENTER);
+      JScrollPane eScroll = new JScrollPane(eContainer);
       eFrame.setSize(500, 500);
+      eFrame.add(eScroll);
       eFrame.setVisible(true);
 
       // Readn and write errors.
@@ -293,16 +298,16 @@ public class SimpleEditor extends JFrame {
       try {
         grammarErrors = Files.readAllLines(grammarFile, Charset.forName("UTF-8"));
         Files.deleteIfExists(grammarFile);
-        areaError.append("----------------- Grammar Errors -----------------" + '\n');
+        areaError.append("----------------- Lexic Errors -----------------" + '\n');
         grammarErrors = grammarErrors.stream().distinct().collect(Collectors.toList());
         for (int i = 0; i < grammarErrors.size(); i++) {
           areaError.append("(" + (i + 1) + "): " + grammarErrors.get(i) + "\n");
         }
       }
       catch ( IOException e ) {
-        areaError.append("-- Compiled without Grammar Errors -- \n");
+        areaError.append("-- Compiled without Lexic Errors -- \n");
       }
-      
+
     }
 
   }
