@@ -1,6 +1,7 @@
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.nio.file.*;
 import java.nio.charset.Charset;
 import java.io.*;
@@ -18,9 +19,11 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	// - String[]: Data, generated with:
 	// - - 0: ID of Node.
 	// - - 1: Type of Node.
-	// - - 2: Scope of Node.
+	// - - 2: Scope of Node. scopeCounter + '_' + ID of Node.
 	// - - 3: Value of Node.
     public Map<String,String[]> SymbolTable = new HashMap<String,String[]>();
+
+		// Custom functions for some specific purposes.
 
     // Method to write file.
     private void writeErrors(String msgs, Path file) {
@@ -50,22 +53,40 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	    } catch (Exception e) {  }
 	}
 
+	// Method to get the scope of current declaration.
+	public String getScope(int scope) {
+		// First I need to get the element corresponding to the scope.
+		for(Map.Entry<String,String[]> m :SymbolTable.entrySet()) {
+				//System.out.println(m.getKey()+"\t=\t"+Arrays.toString(m.getValue()));
+				if (m.getValue()[2].split("_")[0].equals(String.valueOf(scope))) {
+					// Here I check what scope is the one that I need.
+					return m.getValue()[0]; // So I return the scope father's name.
+				}
+		}
+		// If no scope found at all, return null.
+		return "null";
+	}
+
+	// Visitor functions here.
+
 	@Override
 	public String visitProgram(ExprParser.ProgramContext ctx) {
 
 				System.out.println("I visited: PROGRAM");
 
-				String errorMsg = "Syntax error list:";
+				String errorMsg = "Compile error list:";
    				file = Paths.get("ErrorLog_Grammar.log");
    				System.out.println("Visiting!");
 
-				String[] data =  {ctx.getChild(1).getText(), "", String.valueOf(scopeCounter), ""};
+				String[] data =  {ctx.getChild(1).getText(), "", String.valueOf(scopeCounter) + '_' + ctx.getChild(1).getText(), ""};
 				//System.out.println(Arrays.toString(data));
 
 				SymbolTable.put(ctx.getChild(1).getText()+scopeCounter, data);
 				scopeCounter += 1;
 
 				visitChildren(ctx);
+
+				System.out.println(getScope(0));
 
 				printHash(SymbolTable);
 				System.out.println("End tree.");
