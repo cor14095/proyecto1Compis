@@ -1,7 +1,7 @@
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Stack;
 import java.nio.file.*;
 import java.nio.charset.Charset;
 import java.io.*;
@@ -9,10 +9,15 @@ import java.io.*;
 public class EvalVisitor extends ExprBaseVisitor<String> {
 
 	private int scopeCounter = 0;
+	private int conditionConuter = 0;
 
 	private static String newline = System.getProperty("line.separator");
 	private String errorMsg = "Syntax error list:";
 	Path file = Paths.get("ErrorLog_Grammar.log");
+
+	// HACER:
+	// - Tabla de simbolos con los scopes de cada elemento.
+	// - Hacer referencia a esa tabla de scopes
 
 	// HashMap format:
 	// - String: Key, generated with NodeName + scopeCounter.
@@ -21,50 +26,36 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	// - - 1: Type of Node.
 	// - - 2: Scope of Node. scopeCounter + '_' + ID of Node.
 	// - - 3: Value of Node.
-    public Map<String,String[]> SymbolTable = new HashMap<String,String[]>();
+  public Map<String,String[]> SymbolTable = new HashMap<String,String[]>();
+	public Stack<String[]> scopeStack = new Stack<String[]>();
+	// Custom functions for some specific purposes.
 
-		// Custom functions for some specific purposes.
-
-    // Method to write file.
-    private void writeErrors(String msgs, Path file) {
-    	try {
-        	//Files.deleteIfExists(file);
-        	Files.write(file, Arrays.asList(msgs), Charset.forName("UTF-8"));
-        } catch (IOException e) {
-        	System.err.println("Something is wrong.");
-        }
+  // Method to write file.
+  private void writeErrors(String msgs, Path file) {
+    try {
+      //Files.deleteIfExists(file);
+      Files.write(file, Arrays.asList(msgs), Charset.forName("UTF-8"));
+    } catch (IOException e) {
+    	System.err.println("Something is wrong.");
     }
+  }
 
-    // Method to print hashMap
-    public void printHash(Map<String,String[]> map) {
-    	//write to file : "fileone"
-	    try {
-	    	File fileTwo = new File("SymbolTable.table");
-	    	FileOutputStream fos = new FileOutputStream(fileTwo);
-	        PrintWriter pw = new PrintWriter(fos);
+  // Method to print hashMap
+  public void printHash(Map<String,String[]> map) {
+  	//write to file : "fileone"
+    try {
+    	File fileTwo = new File("SymbolTable.table");
+    	FileOutputStream fos = new FileOutputStream(fileTwo);
+        PrintWriter pw = new PrintWriter(fos);
 
-	        for(Map.Entry<String,String[]> m :map.entrySet()) {
-	            pw.println(m.getKey()+"\t=\t"+Arrays.toString(m.getValue()));
-	        }
+        for(Map.Entry<String,String[]> m :map.entrySet()) {
+            pw.println(m.getKey()+"\t=\t"+Arrays.toString(m.getValue()));
+        }
 
-	        pw.flush();
-	        pw.close();
-	        fos.close();
-	    } catch (Exception e) {  }
-	}
-
-	// Method to get the scope of current declaration.
-	public String getScope(int scope) {
-		// First I need to get the element corresponding to the scope.
-		for(Map.Entry<String,String[]> m :SymbolTable.entrySet()) {
-				//System.out.println(m.getKey()+"\t=\t"+Arrays.toString(m.getValue()));
-				if (m.getValue()[2].split("_")[0].equals(String.valueOf(scope))) {
-					// Here I check what scope is the one that I need.
-					return m.getValue()[0]; // So I return the scope father's name.
-				}
-		}
-		// If no scope found at all, return null.
-		return "null";
+        pw.flush();
+        pw.close();
+        fos.close();
+    } catch (Exception e) {  }
 	}
 
 	// Visitor functions here.
@@ -72,26 +63,30 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	@Override
 	public String visitProgram(ExprParser.ProgramContext ctx) {
 
-				System.out.println("I visited: PROGRAM");
+		System.out.println("I visited: PROGRAM");
 
-				String errorMsg = "Compile error list:";
-   				file = Paths.get("ErrorLog_Grammar.log");
-   				System.out.println("Visiting!");
+		String errorMsg = "Compile error list:";
+				file = Paths.get("ErrorLog_Grammar.log");
+				System.out.println("Visiting!");
 
-				String[] data =  {ctx.getChild(1).getText(), "", String.valueOf(scopeCounter) + '_' + ctx.getChild(1).getText(), ""};
-				//System.out.println(Arrays.toString(data));
+		// Create the stack and add values.
+		String[] scope = [String.valueOf(scopeCounter), ctx.getChild(1).getText()];
+		scopeStack.push(scope);
 
-				SymbolTable.put(ctx.getChild(1).getText()+scopeCounter, data);
-				scopeCounter += 1;
+		String[] data =  {ctx.getChild(1).getText(), "", Arrays.valueOf(scopeStack.top()) , ""};
+		//System.out.println(Arrays.toString(data));
 
-				visitChildren(ctx);
+		SymbolTable.put(ctx.getChild(1).getText()+scopeCounter, data);
+		scopeCounter += 1;
 
-				System.out.println(getScope(0));
+		visitChildren(ctx);
 
-				printHash(SymbolTable);
-				System.out.println("End tree.");
+		System.out.println(getScope(0));
 
-				return "final";
+		printHash(SymbolTable);
+		System.out.println("End tree.");
+
+		return "final";
 	}
 	@Override
 	public String visitDeclaration(ExprParser.DeclarationContext ctx) {
@@ -101,64 +96,54 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 	}
 	@Override
 	public String visitVarDeclaration(ExprParser.VarDeclarationContext ctx) {
+		String[] data = new String[4];
 
-    if (ctx.getParent().getChild(0).getText().equals("if")
-      || ctx.getParent().getChild(0).getText().equals("else")
-      || ctx.getParent().getChild(0).getText().equals("while")) {
+		System.out.println("I visited: VarDeclaration of " + ctx.getChild(1).getText() + " on scope " + String.valueOf(scopeCounter));
 
-    } else {
-          scopeCounter -= 1;
-        }
-				String[] data = new String[4];
+		// Getting scopeID
+		String scope = Arrays.valueOf(scopeStack.top());
 
-				System.out.println("I visited: VarDeclaration of " + ctx.getChild(1).getText() + " on scope " + String.valueOf(scopeCounter));
+		// We have 2 cases here, 1) normal declaration, 2) Array declaration.
+		// For the first case it's simple
+		if (ctx.getText().indexOf('[') == -1) {
+			// If there's not a '[', then it's normal.
+			data[0] = ctx.getChild(1).getText();
+			data[1] = ctx.getChild(0).getText();
+			data[2] = scope;
+			data[3] = "";
 
-				// We have 2 cases here, 1) normal declaration, 2) Array declaration.
-				// For the first case it's simple
-				if (ctx.getText().indexOf('[') == -1) {
-					// If there's not a '[', then it's normal.
-					data[0] = ctx.getChild(1).getText();
-					data[1] = ctx.getChild(0).getText();
-					data[2] = String.valueOf(scopeCounter);
-					data[3] = "";
+			//System.out.println(Arrays.toString(data));
+		} else {
+			// If it has one then we need to do a little tweek.
+			data[0] = ctx.getChild(1).getText();
+			data[1] = "_Array" + ctx.getChild(0).getText() + "," + ctx.getChild(3); // Trick here is that in the table we look for "_Array" and we have all Arrays and after a split we have the size.
+			data[2] = scope;
+			data[3] = "";
 
-					//System.out.println(Arrays.toString(data));
-				} else {
-					// If it has one then we need to do a little tweek.
-					data[0] = ctx.getChild(1).getText();
-					data[1] = "_Array" + ctx.getChild(0).getText() + "," + ctx.getChild(3); // Trick here is that in the table we look for "_Array" and we have all Arrays and after a split we have the size.
-					data[2] = String.valueOf(scopeCounter);
-					data[3] = "";
+			//System.out.println(Arrays.toString(data));
+		}
 
-					//System.out.println(Arrays.toString(data));
-				}
+		//System.out.println("Key is: " + ctx.getChild(1).getText()+scopeCounter);
+	  try {
+	        String test = SymbolTable.get(ctx.getChild(1).getText()+scopeCounter)[0];
+	        errorMsg = errorMsg + newline + "Lexic Error - At line: " + ctx.getText() + ". Double declaration for variable.";
+	        writeErrors(errorMsg, file);
+	  } catch (Exception e) {
+	        SymbolTable.put(ctx.getChild(1).getText()+scopeCounter, data);
+	  }
 
-				//System.out.println("Key is: " + ctx.getChild(1).getText()+scopeCounter);
-        try {
-              String test = SymbolTable.get(ctx.getChild(1).getText()+scopeCounter)[0];
-              errorMsg = errorMsg + newline + "Lexic Error - At line: " + ctx.getText() + ". Double declaration for variable.";
-              writeErrors(errorMsg, file);
-        } catch (Exception e) {
-              SymbolTable.put(ctx.getChild(1).getText()+scopeCounter, data);
-        }
-
-        if (ctx.getParent().getChild(0).getText().equals("if")
-          || ctx.getParent().getChild(0).getText().equals("else")
-          || ctx.getParent().getChild(0).getText().equals("while")) {
-        } else {
-          scopeCounter += 1;
-        }
-
-				return visitChildren(ctx);
+		return visitChildren(ctx);
 	}
 	@Override
 	public String visitStructDeclaration(ExprParser.StructDeclarationContext ctx) {
 
 				System.out.println("I visited: StructDeclaration of " + ctx.getChild(1).getText());
 
+				scopeCounter += 1;
+
 				String[] data =  {ctx.getChild(1).getText(),
 					ctx.getChild(0).getText() + "_" + ctx.getChild(1).getText(),
-					String.valueOf(scopeCounter),
+					Arrays.valueOf(scopeStack.top()),
 					""};
 				//System.out.println(Arrays.toString(data));
         try {
@@ -168,9 +153,16 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
         } catch (Exception e) {
               SymbolTable.put(ctx.getChild(1).getText(), data);
         }
-				scopeCounter += 1;
 
-				return visitChildren(ctx);
+				// Create the stack and add values.
+				String[] scope = [String.valueOf(scopeCounter), ctx.getChild(1).getText()];
+				scopeStack.push(scope);
+
+				visitChildren(ctx);
+
+				scopeStack.pop();
+
+				return ctx.getText();
 	}
 	@Override
 	public String visitVarType(ExprParser.VarTypeContext ctx) {
@@ -186,10 +178,15 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
 
 				System.out.println("I visited: MethodDeclaration of " + ctx.getChild(1).getText());
 
+				// Getting scopeID
+				String scope = scopeCounter + "_" + getScope(scopeCounter);
+
+				scopeCounter += 1;
+
 				// Make Method values.
 				data[0] = ctx.getChild(1).getText();
 				data[1] = ctx.getChild(0).getText();
-				data[2] = String.valueOf(scopeCounter);
+				data[2] = scope;
         // data[3] will hold all the types of parameters.
 
         String paramType = "";
@@ -204,11 +201,11 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
           // If it is just move on.
           paramCounter += 1;
         }
-        System.out.println(data[3]);
+        //System.out.println(data[3]);
 				//System.out.println(Arrays.toString(data));
 
 				// Add them to the Hash Map.
-        System.out.println(data[1] + data[0] + data[3]);
+        //System.out.println(data[1] + data[0] + data[3]);
         try {
           String test = SymbolTable.get(data[1] + data[0] + data[3])[0];
           errorMsg = errorMsg + newline + "Lexic Error - At line: " + ctx.getText() + ". Double declaration for method.";
@@ -217,9 +214,11 @@ public class EvalVisitor extends ExprBaseVisitor<String> {
           SymbolTable.put(data[1] + data[0] + data[3], data);
         }
 
-				scopeCounter += 1;
+				visitChildren(ctx);
 
-				return visitChildren(ctx);
+				scopeCounter -= 1;
+
+				return ctx.getText();
 	}
 	@Override
 	public String visitMethodType(ExprParser.MethodTypeContext ctx) {
